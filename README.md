@@ -37,4 +37,7 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 
 **10-consolidate_methylation_calls.R** makes a single table with methylation calls at each site in all accessions, filtered for CG sites with SNPs, then estimates mean mCG per gene per sample.
 
-**maps_code.R** plots locations of accessions on outline maps of Europe
+**maps_code.R** plots locations of accessions on outline maps of Europe.
+
+**pygwas.sh** runs the PyGWAS application on a SLURM cluster to estimate associations between loci and phenotypes.
+
