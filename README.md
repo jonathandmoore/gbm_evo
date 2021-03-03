@@ -45,6 +45,8 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 
 **consolidate_pygwas_results.R** and **consolidate_pygwas_p-values.R** process PyGWAS results for consolidated reporting. We tried a number of alternative minimum coverage thresholds.
 
+**run_tassel.sh** runs tassel on SLURM cluster for finding associations between 200 environmental variables and gene methylation status. Relevant config files are 881_mlm_config_template.xml, popstructure881acc_7pca_commandlineformat.txt, gbm_881_acc_k_matrix.txt, 881accessions_gbm_umr_calls_2_polymorphiclocifortassel.txt, 200_environments_for_pyGWAS.txt
+
 **merge_segmentation_models.R** merges segmentation models across accessions to identify the methylatable space in Arabidopsis. A range of parameter options are tried.
 
 **parse_haplo_data.R** loads up SNP data, creates a haplogroups file for each gene, correlates gbM and teM retained eQTL by haplogroup, and writes out matrices of p-values etc.
