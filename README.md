@@ -41,3 +41,4 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 
 **pygwas.sh** runs the PyGWAS application on a SLURM cluster to estimate associations between loci and phenotypes.
 
+**consolidate_pygwas_results.R** and **consolidate_pygwas_p-values.R** process PyGWAS results for consolidated reporting.
