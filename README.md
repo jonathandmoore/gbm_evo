@@ -47,7 +47,7 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 
 **run_tassel.sh** is an example of running tassel on SLURM cluster for finding associations between 200 environmental variables and gene methylation status. Relevant config files are 881_mlm_config_template.xml, popstructure881acc_7pca_commandlineformat.txt, gbm_881_acc_k_matrix.txt, 881accessions_gbm_umr_calls_2_polymorphiclocifortassel.txt, 200_environments_for_pyGWAS.txt
 
-**merge_segmentation_models.R** merges segmentation models across accessions to identify the methylatable space in Arabidopsis. A range of parameter options are tried.
+**merge_segmentation_models.R** merges segmentation models across accessions to identify the broadly methylatable gene body space in Arabidopsis. A range of parameter options are tried.
 
 **parse_haplo_data.R** loads up SNP data, creates a haplogroups file for each gene, correlates gbM and teM retained eQTL by haplogroup, and writes out matrices of p-values etc.
 
