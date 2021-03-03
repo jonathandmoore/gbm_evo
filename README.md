@@ -8,7 +8,7 @@ The analysis scripts underlying the work are archived here for transparency and 
 
 **Primary analysis/data reduction:**
 
-**0-ETL_1001_methylomes.R** is the ETL script that starts the process of analysing the 1001 methylomes data set.  It is an R script whose purpose is to create shell scripts to use a SLURM cluster to carry out a batch-wise methylation analysis of the 1001 methylomes data sets, downloaded from SRA.
+**0-ETL_1001_methylomes.R** is the Extract/Translate/Load script that starts the process of analysing the 1001 methylomes data set.  It is an R script whose purpose is to create shell scripts to use a SLURM cluster to carry out a batch-wise methylation analysis of the 1001 methylomes data sets, downloaded from SRA.
 
 This script reads the lists of samples and fastq files, downloaded from ENA and SRA (**ENA_SR*.txt** and **GSE*.txt**). It associates FASTQ files with samples, and samples with Arabidopsis accession identifiers from the 1001 genomes project.  It then works through the accessions, ten at a time, making SLURM shell scripts to carry out each subsequent stage of the primary analysis for the 10 accessions in question:
 
