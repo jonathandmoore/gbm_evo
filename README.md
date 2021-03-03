@@ -36,3 +36,5 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 **8b-analyse_segmentation.R** segments the CG and non-CG methylomes for a sample to generate a model of the genome partitioned into contiguous UM, gbM, teM and gbM-like segments.
 
 **10-consolidate_methylation_calls.R** makes a single table with methylation calls at each site in all accessions, filtered for CG sites with SNPs, then estimates mean mCG per gene per sample.
+
+**maps_code.R** plots locations of accessions on outline maps of Europe
