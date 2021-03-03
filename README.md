@@ -48,3 +48,6 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 **parse_haplo_data.R** load up SNP data, create a haplogroups file for each gene, correlate gbM and teM retained eQTL and write out matrices of p-values etc.
 
 **correl_genes_total_mcg.R** correlate mCG by gene with genome-wide mean mCG. 
+
+**classify_genes_methylation_status.R** uses the segmentation and CG site methylation state in each accession to classify each gene's methylation status in each accession as UM, gbM, teM, or both, or indeterminate. A variety of sensitivity thresholds are implemented.
+
