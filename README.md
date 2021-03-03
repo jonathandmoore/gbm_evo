@@ -17,11 +17,11 @@ This script reads the lists of samples and FASTQ files, downloaded from ENA and 
   . retrieve them to local cluster node temporary SSD
   . align them to the genome reference and merge the results
   . call methylation status at each CG site
-  . segment each methylomes into contiguous UM, gbM, teM, or gbM-like segmennts
+  . segment each methylome into contiguous UM, gbM, teM, or gbM-like segments
   . process the non-CG methylation
   . check the results back into the object store
 
-The process is carried out batch-wise to limit primary disk space occupied by raw FASTQ and alignment files at any given time, and if run one batch at a time takes up to 100 days.
+This workflow is carried out batch-wise to limit primary disk space occupied by raw FASTQ and alignment files at any given time, and if run one batch at a time takes up to 100 days elapsed.
 
 Example scripts of each of the stages, for a single batch of 10 samples, are given here (e.g. **0-wget_batch_0.sh**, **1-dtool_create_0.sh** etc) and the scripts are daisychained, so as each stage completes it calls the script which initiates the subsequent stage. 
 
@@ -37,6 +37,8 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 
 **10-consolidate_methylation_calls.R** makes a single table with methylation calls at each site in all accessions, filtered for CG sites with SNPs, then estimates mean mCG per gene per sample.
 
+**classify_genes_methylation_status.R** uses the segmentation and CG site methylation state in each accession to classify each gene's methylation status in each accession as UM, gbM, teM, or both, or indeterminate. A variety of sensitivity thresholds are implemented.
+
 **maps_code.R** plots locations of accessions on outline maps of Europe.
 
 **pygwas.sh** runs the PyGWAS application on a SLURM cluster to estimate associations between loci and phenotypes.
@@ -45,9 +47,6 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 
 **merge_segmentation_models.R** merges segmentation models across accessions to identify the methylatable space in Arabidopsis. A range of parameter options are tried.
 
-**parse_haplo_data.R** load up SNP data, create a haplogroups file for each gene, correlate gbM and teM retained eQTL and write out matrices of p-values etc.
+**parse_haplo_data.R** loads up SNP data, creates a haplogroups file for each gene, correlates gbM and teM retained eQTL by haplogroup, and writes out matrices of p-values etc.
 
-**correl_genes_total_mcg.R** correlate mCG by gene with genome-wide mean mCG. 
-
-**classify_genes_methylation_status.R** uses the segmentation and CG site methylation state in each accession to classify each gene's methylation status in each accession as UM, gbM, teM, or both, or indeterminate. A variety of sensitivity thresholds are implemented.
-
+**correl_genes_total_mcg.R** correlates mCG by gene with genome-wide mean mCG. 
