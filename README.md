@@ -10,20 +10,20 @@ The analysis scripts underlying the work are archived here for transparency and 
 
 **0-ETL_1001_methylomes.R** is the Extract/Translate/Load script that starts the process of analysing the 1001 methylomes data set.  It is an R script whose purpose is to create shell scripts to use a SLURM cluster to carry out a batch-wise methylation analysis of the 1001 methylomes data sets, downloaded from SRA.
 
-This script reads the lists of samples and fastq files, downloaded from ENA and SRA (**ENA_SR*.txt** and **GSE*.txt**). It associates FASTQ files with samples, and samples with Arabidopsis accession identifiers from the 1001 genomes project.  It then works through the accessions, ten at a time, making SLURM shell scripts to carry out each subsequent stage of the primary analysis for the 10 accessions in question:
+This script reads the lists of samples and FASTQ files, downloaded from ENA and SRA (**ENA_SR*.txt** and **GSE*.txt** files define the set of relevant ENA/SRA accessions). It associates FASTQ files with samples, and samples with Arabidopsis accession identifiers from the 1001 genomes project.  It then works through the samples, ten at a time, making SLURM shell scripts to carry out each subsequent stage of the primary analysis for the 10 samples in question:
 
-  . download the relevant fastq files from SRA
+  . download the relevant FASTQ files of methylome data from SRA
   . check the FASTQ files into an object store
   . retrieve them to local cluster node temporary SSD
-  . align them to the reference
-  . call methylation at each CG site
-  . segment the methylomes
+  . align them to the genome reference and merge the results
+  . call methylation status at each CG site
+  . segment each methylomes into contiguous UM, gbM, teM, or gbM-like segmennts
   . process the non-CG methylation
   . check the results back into the object store
 
 The process is carried out batch-wise to limit primary disk space occupied by raw FASTQ and alignment files at any given time, and if run one batch at a time takes up to 100 days.
 
-Example scripts of each of the stages are given (e.g. **0-wget_batch_0.sh**, **1-dtool_create_0.txt** etc) and the scripts are daisychained, so each stage calls the script to initiate the subsequent stage. 
+Example scripts of each of the stages, for a single batch of 10 samples, are given here (e.g. **0-wget_batch_0.sh**, **1-dtool_create_0.sh** etc) and the scripts are daisychained, so as each stage completes it calls the script which initiates the subsequent stage. 
 
 Once the primary data reduction is complete, the remaining R scripts relate to the secondary analyses of methylation from the paper.
 
