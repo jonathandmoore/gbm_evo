@@ -33,4 +33,4 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 
 **8a-non_CG_methylation.R** segments the CG and non-CG methylomes for a sample to generate a model of the genome partitioned into contiguous UM, gbM, teM and gbM-like segments.
 
-
+**10-consolidate_methylation_calls.R** estimates mean mCG per gene per sample.
