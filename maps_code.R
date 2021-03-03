@@ -7,7 +7,7 @@ data5= read.table(file="Maps/FLC_UM_and_gbM_48_to_52_degree_latitude.txt", sep="
 
 library(ggmap)
 library(mapproj)
-register_google(key="AIzaSyBYZ2MkShIY-zsROZADNthYv0KZVvYpNyE")
+register_google(key="")
 
 our_maptype="satellite"
 our_maptype="terrain-background"
