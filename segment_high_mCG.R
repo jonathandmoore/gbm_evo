@@ -1,0 +1,5 @@
+# Top 10 acessions by gbm_gene_mCG:
+sample_ids = c("SRX445897", "SRX445898", "SRX446021", "SRX446052", "SRX446024", "SRX1664724", "SRX2190783", "SRX248734", "SRX446023", "SRX446016")
+
+
+
