@@ -42,3 +42,5 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 **pygwas.sh** runs the PyGWAS application on a SLURM cluster to estimate associations between loci and phenotypes.
 
 **consolidate_pygwas_results.R** and **consolidate_pygwas_p-values.R** process PyGWAS results for consolidated reporting. We tried a number of alternative minimum coverage thresholds.
+
+**merge_segmentation_models.R** merges segmentation models across accessions to identify the methylatable space in Arabidopsis. A range of parameter options are tried.
