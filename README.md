@@ -41,7 +41,7 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 
 **maps_code.R** plots locations of accessions on outline maps of Europe.
 
-**pygwas.sh** runs the PyGWAS application on a SLURM cluster to estimate associations between loci and phenotypes.
+**pygwas_3.sh** runs the PyGWAS application on a SLURM cluster to estimate associations between loci and phenotypes. Various models (lm and amm), and filtering on p-value and MAF thresholds are tried.
 
 **consolidate_pygwas_results.R** and **consolidate_pygwas_p-values.R** process PyGWAS results for consolidated reporting. We tried a number of alternative minimum coverage thresholds.
 
