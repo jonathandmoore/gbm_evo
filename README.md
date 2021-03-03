@@ -44,3 +44,5 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 **consolidate_pygwas_results.R** and **consolidate_pygwas_p-values.R** process PyGWAS results for consolidated reporting. We tried a number of alternative minimum coverage thresholds.
 
 **merge_segmentation_models.R** merges segmentation models across accessions to identify the methylatable space in Arabidopsis. A range of parameter options are tried.
+
+**parse_haplo_data.R** load up SNP data, create a haplogroups file for each gene, correlate gbM and teM retained eQTL and write out matrices of p-values etc.
