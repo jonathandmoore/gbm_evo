@@ -12,14 +12,14 @@ The analysis scripts underlying the work are archived here for transparency and 
 
 This script reads the lists of samples and fastq files, downloaded from ENA and SRA (**ENA_SR*.txt** and **GSE*.txt**). It associates FASTQ files with samples, and samples with Arabidopsis accession identifiers from the 1001 genomes project.  It then works through the accessions, ten at a time, making SLURM shell scripts to carry out each subsequent stage of the primary analysis for the 10 accessions in question:
 
-  . download the relevant fastq files from ENA/SRA
-  . check the fastq files into an object store
+  . download the relevant fastq files from SRA
+  . check the FASTQ files into an object store
   . retrieve them to local cluster node temporary SSD
   . align them to the reference
   . call methylation at each CG site
   . segment the methylomes
   . process the non-CG methylation
-  . check the results back into the object store.  
+  . check the results back into the object store
 
 The process is carried out batch-wise to limit primary disk space occupied by raw FASTQ and alignment files at any given time, and if run one batch at a time takes up to 100 days.
 
@@ -30,4 +30,7 @@ Once the primary data reduction is complete, the remaining R scripts relate to t
 **Secondary analysis:**
 
 Methylation calls, and methylation segmentations, are integrated to generate methylation status calls, and methylation level estimates, for each gene in each accession.
+
+**8b-analyse_segmentation.R** segments the CG and non-CG methylomes for a sample to generate a model of the genome partitioned into contiguous UM, gbM, teM and gbM-like segments.
+
 
