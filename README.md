@@ -33,6 +33,6 @@ Methylation calls, and methylation segmentations, are integrated to generate met
 
 **parse_1001genome_VCF.pl** parses the 1001 genome SNP file to extract list of SNPs w.r.t. Col-0 in each accession.
 
-**8a-non_CG_methylation.R** segments the CG and non-CG methylomes for a sample to generate a model of the genome partitioned into contiguous UM, gbM, teM and gbM-like segments.
+**8b-analyse_segmentation.R** segments the CG and non-CG methylomes for a sample to generate a model of the genome partitioned into contiguous UM, gbM, teM and gbM-like segments.
 
-**10-consolidate_methylation_calls.R** estimates mean mCG per gene per sample.
+**10-consolidate_methylation_calls.R** makes a single table with methylation calls at each site in all accessions, filtered for CG sites with SNPs, then estimates mean mCG per gene per sample.
