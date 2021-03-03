@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<TasselPipeline>
+    <fork1>
+        <h>../881accessions_gbm_umr_calls_2_polymorphiclocifortassel.txt</h>
+        <filterAlign>
+        </filterAlign>
+    </fork1>
+    <fork2>
+        <r>climate_variable_for_tassel.txt</r>
+    </fork2>
+    <fork3>
+        <r>../popstructure881acc_7pca_commandlineformat.txt</r>
+        <excludeLastTrait/>
+    </fork3>
+    <fork4>
+        <k>../gbm_881_acc_k_matrix.txt</k>
+    </fork4>
+    <combine5>
+        <input1/>
+        <input2/>
+        <input3/>
+        <intersect/>
+    </combine5>
+    <combine6>
+        <input5/>
+        <input4/>
+        <mlm>
+            <mlmVarCompEst>P3D</mlmVarCompEst>
+            <mlmCompressionLevel>None</mlmCompressionLevel>
+        </mlm>
+        <export>881_mlm_output</export>
+    </combine6>
+    <runfork1/>
+    <runfork2/>
+    <runfork3/>
+    <runfork4/>
+</TasselPipeline>
