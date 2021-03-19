@@ -14,14 +14,14 @@ Please note that these scripts are not intended as a ready-to-run software packa
 
 This script reads the lists of samples and FASTQ files, downloaded from ENA and SRA (**ENA_SR*.txt** and **GSE*.txt** files define the set of relevant ENA/SRA accessions). It associates FASTQ files with samples, and samples with Arabidopsis accession identifiers from the 1001 genomes project.  It then works through the samples, ten at a time, making SLURM shell scripts to carry out each subsequent stage of the primary analysis for the 10 samples in question:
 
-  . download the relevant FASTQ files of bisulphite sequence data from SRA
-  . check the FASTQ files into an object store
-  . retrieve them to local cluster node temporary SSD
-  . align them to the genome reference and merge the results from multiple FASTQ files per sample
-  . call methylation status at each CG site
-  . segment each methylome into contiguous UM, gbM, teM, or gbM-like segments
-  . process the non-CG methylation
-  . check the results back into the object store
+  - download the relevant FASTQ files of bisulphite sequence data from SRA
+  - check the FASTQ files into an object store
+  - retrieve them to local cluster node temporary SSD
+  - align them to the genome reference and merge the results from multiple FASTQ files per sample
+  - call methylation status at each CG site
+  - segment each methylome into contiguous UM, gbM, teM, or gbM-like segments
+  - process the non-CG methylation
+  - check the results back into the object store
 
 This workflow is carried out batch-wise to limit primary disk space occupied by raw FASTQ and alignment files at any given time, and if run one batch at a time takes up to 100 days elapsed.
 
