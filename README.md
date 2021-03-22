@@ -10,7 +10,7 @@ Please note that these scripts are not intended as a ready-to-run software packa
 
 **Primary analysis/data reduction:**
 
-**ENA_SR*.txt** and **GSE*.txt** files define the set of relevant ENA/SRA accessions.
+**ENA_SR....txt** and **GSE....txt** files define the set of relevant ENA/SRA accessions.
 
 **0-ETL_1001_methylomes.R** is the Extract/Translate/Load script that starts the process of analysing the 1001 methylomes data set.  It is an R script whose purpose is to create shell scripts to use a SLURM cluster to carry out a batch-wise methylation analysis of the 1001 methylomes data sets, downloaded from SRA/ENA.
 
