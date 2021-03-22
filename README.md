@@ -10,9 +10,11 @@ Please note that these scripts are not intended as a ready-to-run software packa
 
 **Primary analysis/data reduction:**
 
+**ENA_SR*.txt** and **GSE*.txt** files define the set of relevant ENA/SRA accessions.
+
 **0-ETL_1001_methylomes.R** is the Extract/Translate/Load script that starts the process of analysing the 1001 methylomes data set.  It is an R script whose purpose is to create shell scripts to use a SLURM cluster to carry out a batch-wise methylation analysis of the 1001 methylomes data sets, downloaded from SRA/ENA.
 
-This script reads the lists of samples and FASTQ files, downloaded from ENA and SRA (**ENA_SR*.txt** and **GSE*.txt** files define the set of relevant ENA/SRA accessions). It associates FASTQ files with samples, and samples with Arabidopsis accession identifiers from the 1001 genomes project.  It then works through the samples, ten at a time, making SLURM shell scripts to carry out each subsequent stage of the primary analysis for the 10 samples in question:
+This script reads the lists of samples and FASTQ files, downloaded from ENA and SRA. It associates FASTQ files with samples, and samples with Arabidopsis accession identifiers from the 1001 genomes project.  It then works through the samples, ten at a time, making SLURM shell scripts to carry out each subsequent stage of the primary analysis for the 10 samples in question:
 
   - download the relevant FASTQ files of bisulphite sequence data from SRA (wget)
   - check the FASTQ files into an object store (dtool)
