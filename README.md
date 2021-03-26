@@ -59,3 +59,6 @@ Methylation calls and methylation segmentation models are integrated, to generat
 
 **merge_segmentation_models.R** merges segmentation models across accessions to identify the broadly methylatable gene body space in Arabidopsis. A wide range of parameter and sensitivity options are implemented.
 
+**met1_vs_col0.R** generates comparisons of bisulphite-seq and H3K9me2 chipseq data for met1 vs. Col-0.
+
+**boxcox_eQTLs.R** applies boxcox transform to gbM and teM eQTLs for association analysis of trans-acting factors.
