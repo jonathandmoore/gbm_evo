@@ -62,3 +62,5 @@ Methylation calls and methylation segmentation models are integrated, to generat
 **met1_vs_col0.R** generates comparisons of bisulphite-seq and H3K9me2 chipseq data for met1 vs. Col-0.
 
 **boxcox_eQTLs.R** applies boxcox transform to gbM and teM eQTLs for association analysis of trans-acting factors.
+
+**extract_gbm_example_states.R** replaces a section from the middle of merge_segmentation_models.R. The purpose of the section is to extract example accession CG methylomes from each decile of global genome mean mCG, for modelling and analysis.
