@@ -64,3 +64,5 @@ Methylation calls and methylation segmentation models are integrated, to generat
 **boxcox_eQTLs.R** applies boxcox transform to gbM and teM eQTLs for association analysis of trans-acting factors.
 
 **extract_gbm_example_states.R** replaces a section from the middle of merge_segmentation_models.R. The purpose of the section is to extract example accession CG methylomes from each decile of global genome mean mCG, for modelling and analysis.
+
+**ends_analysis.pl** analyses two gff files, one for 'genes' or regions of interest, and one for scores at loci. It generates a metaplot histogram spanning the ends of the 'genes' showing how the mean score averaged over all genes varies at bp resolution around the borders of 'genes'.  It is copied from DZLab_tools from zilbermanlab.net, with one fix applied at line 214. 
