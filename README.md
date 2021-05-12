@@ -72,10 +72,14 @@ Methylation calls and methylation segmentation models are integrated, to generat
 **parse_h2az_associations.R** loads lists of genes associated by PyGWAS with variation around HTA9 gene (H2A.Z), and compares these genes with those not associated, in terms of their H2A.Z.
 
 
-Scripts specific to the analysis of the Schmitz and Becker MA line data sets
+**Scripts specific to the analysis of the Schmitz and Becker MA line data sets**
+
+# Schmitz et al, 2011 - NCBI SRA accession SRA035939
+# Becker et al, 2011 - EMBL ENA accession PRJEB2678
+
+assign_gene_methylation_status_2020-08-21.R
 5_estimate_de_novo_rate_2019-09-12.R
 5-estimate_GBM_rates_2020-08-07.R
-assign_gene_methylation_status_2020-08-21.R
 5-estimate_GBM_boundary_size_2019-04-25.R
 5-methylation_calls_2018-06-26.R
 5-methylation_calls_optimise_non_CG_segmentationf_2018-03-14.R
@@ -92,6 +96,5 @@ assign_gene_methylation_status_2020-08-21.R
 3-align-PRJEB2678.sh
 2-trim_SRA035939.sh
 2-trim_PRJEB2678.sh
-
 1-qc.sh
 0-stage.sh
