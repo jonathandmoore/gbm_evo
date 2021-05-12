@@ -74,8 +74,8 @@ Methylation calls and methylation segmentation models are integrated, to generat
 
 **Scripts specific to the analysis of the Schmitz and Becker MA line data sets**
 
-# Schmitz et al, 2011 - NCBI SRA accession SRA035939
-# Becker et al, 2011 - EMBL ENA accession PRJEB2678
+ Schmitz et al, 2011 - NCBI SRA accession SRA035939
+ Becker et al, 2011 - EMBL ENA accession PRJEB2678
 
 assign_gene_methylation_status_2020-08-21.R
 5_estimate_de_novo_rate_2019-09-12.R
