@@ -9,16 +9,18 @@
 #GSM307379.gff	Zilberman H2A.Z IP/total DNA 1825002 (Ab-2 met1-6)
 #GSM307380.gff	Zilberman H2A.Z IP/total DNA 1825302 (Ab-1 met1-6)
 
-# The rationale for us using the met1 h2az chip data is that in met1, h2az distribution should be independent of gbM
+# The rationale for considering using the met1 h2az chip data is that in met1, h2az distribution should be independent of gbM
 
 # Ab-1 and Ab-2 are reps
 
 #Array platform: GPL3371	FHCRC Arabidopsis Tiling Array
 #GPL3371-3816.txt contains array design
+#The array was designed for TAIR7, so the array probes need to be realigned to TAIR9/10 to correctly assign IP values to genomic loci 
 
+#this needs executing first in bash to align probes to genome:
 #makeblastdb -in ../../../../Reference_data/Genomes/Arabidopsis/TAIR10/TAIR10_Chr.all.fasta -dbtype nucl -out TAIR10
 #blastn -db TAIR10 -query GPL3371-3816.fasta -outfmt 6 > GPL3371-3816_v_TAIR10.txt
-
+#The best BLAST result for each probe will then be used to assign that probe's IP values to a locus
 
 setwd("X:/Daniel-zilberman/Projects/Jay-1001_methylomes/5-analysis")
 
@@ -31,9 +33,12 @@ probe_align_file = "../0-reference/chipseq/GPL3371-3816_v_TAIR10.txt"
 probe_align = read.table(file=probe_align_file, sep="\t", header=FALSE)
 colnames(probe_align) = c("query","subject","percent","length","mismatch","gapopen","qstart","qend","sstart","send","evalue","bitscore")
 
-#h2az_set = "wt_chipseq"
-h2az_set = "met1_chipchip"
 
+# here we set a flag for which version of H2AZ data we will use for the rest of the script - wt or met1
+h2az_set = "wt_chipseq"
+#h2az_set = "met1_chipchip"
+
+# this flag can be set TRUE after the H2AZ data has been parsed once the first time - this is a slow process, but the results get saved to disk so can be used in subsequent runs of the script
 h2az_loaded=TRUE
 
 
@@ -68,7 +73,7 @@ if (h2az_set=="met1_chipchip") {
     h2az_table = h2az_both[,7:10]
     colnames(h2az_table) = c("seqnames","start","end","score")
     h2az_table$seqnames = substr(h2az_table$seqnames,4,4)
-    # commented out as slow, and only needed once:
+    # slow, and only needed once:
     write.table(h2az_table, file="h2az_met1.txt", sep="\t", quote=FALSE, col.names=TRUE, row.names=FALSE)
     write.table(cbind(h2az_table$seqnames, "source"=rep("-", nrow(h2az_table)), "identifier"=rep("-", nrow(h2az_table)), h2az_table$start, h2az_table$end, h2az_table$score, "strand"=rep("-", nrow(h2az_table)), "frame"=rep("-", nrow(h2az_table)), "attribute"=rep("-", nrow(h2az_table))), file=paste0("h2az_met1.gff"), sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
     h2az_loaded=TRUE
@@ -91,22 +96,27 @@ if (h2az_set=="met1_chipchip") {
 
 if (h2az_set=="wt_chipseq") {
   if (!h2az_loaded) {
-    # This is the 'old' h2az data, which is for wt, originates in CHIP-Seq, and is at 50bp resolution
+    # This is the h2az data, which is for wt, originates in CHIP-Seq, and is at 50bp resolution
     # from Dave, probably: https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1002988
     h2az = readRDS(file="../0-reference/chipseq/H2AZ.devin_plos_genetics.w50.Chr.RDS")
     levels(h2az@seqnames@values) = substr(as.character(levels(h2az@seqnames@values)),4,4)
     h2az@seqinfo@seqnames = levels(h2az@seqnames@values)
     h2az_table = as.data.frame(h2az)
-    # commented out as slow, and only needed once:
+    # slow, and only needed once:
     write.table(h2az_table, file="h2az_wt.txt", sep="\t", quote=FALSE, col.names=TRUE, row.names=FALSE)
     # write a version out with integer scores for visualisation in SeqMonk:
  	write.table(cbind(h2az_table, "int_score"=round(h2az_table$score*5,0)), file="h2az_wt_int.txt", sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
     write.table(cbind(h2az_table$seqnames, "source"=rep("-", nrow(h2az_table)), "identifier"=rep("-", nrow(h2az_table)), h2az_table$start, h2az_table$end, h2az_table$score, "strand"=rep("-", nrow(h2az_table)), "frame"=rep("-", nrow(h2az_table)), "attribute"=rep("-", nrow(h2az_table))), file=paste0("h2az.gff"), sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
   } else {
     h2az_table = read.table(file="h2az_wt.txt", sep="\t", header=TRUE)
+    h2az = makeGRangesFromDataFrame(df=h2az_table, seqnames.field="seqnames", start.field="start", end.field="end")
+    h2az$score = h2az_table$score
   }
 }
 
+
+
+#hypotheses for why the model fits better to some segments than others:
 #Is it the short segments?
 #Is it the dense segments?
 #Is it dense knobs on the ends?
@@ -123,17 +133,24 @@ if (h2az_set=="wt_chipseq") {
 
 #What proportion of sites are called cleanly? Is this related to how wrong the model is?
 
-# are we doing the model or the data?
-doing_model=FALSE
-#doing_model=TRUE
+
+
+# are we doing the model or the data?  This flag allows us to process methylation states from data or model identically
+#doing_model=FALSE
+doing_model=TRUE
+
+
+# These are several alternative file sets, depending which annotation we are using
 
 # MAF 5% 2500 genes
 annotation_file = "gene_gbm_segments_min_seg_cover_47_min_CG_3_trans.tsv"
 annotation_name = "maf_5_percent"
-model_performance_file = "gene_gbm_segments_min_seg_cover_47_min_CG_3_trans_Sampled_D3D4D5_output_Sim30.tsv"
-model_performance_file = "gene_gbm_segments_MAF_5_perc_trans_h2az_wt_chipseq_1p2_Sampled_D3D4D5_output_Sim30.tsv"
-model_performance_file = "gene_gbm_segments_MAF_5_perc_trans_h2az_met1_chipchip_0_Sampled_D3D4D5_output_Sim30.tsv"
-
+#model_file="gene_gbm_segments_MAF_5_perc_trans_h2az_wt_chipseq_1p2_Sampled_D3D4D5_output_SimState_0.tsv"
+model_file="gene_gbm_segments_MAF_5_perc_trans_h2az_wt_chipseq_1p2_AllLoci_D3D4D5_output_SimState_0.tsv"
+#model_performance_file = "gene_gbm_segments_min_seg_cover_47_min_CG_3_trans_Sampled_D3D4D5_output_Sim30.tsv"
+#model_performance_file = "gene_gbm_segments_MAF_5_perc_trans_h2az_wt_chipseq_1p2_Sampled_D3D4D5_output_Sim30.tsv"
+#model_performance_file = "gene_gbm_segments_MAF_5_perc_trans_h2az_met1_chipchip_0_Sampled_D3D4D5_output_Sim30.tsv"
+model_performance_file = "gene_gbm_segments_MAF_5_perc_trans_h2az_wt_chipseq_1p2_AllLoci_D3D4D5_output_Sim30.tsv"
 
 # MAF 10% all genes
 #annotation_file = "gene_gbm_segments_min_seg_cover_94_min_CG_3_trans.tsv"
@@ -146,7 +163,7 @@ model_performance_file = "gene_gbm_segments_MAF_5_perc_trans_h2az_met1_chipchip_
 #model_file = "AnnoTrans_MinAcc_0p005_MinCG_3_MinSpacing_30_Sampled_output_SimState_0.tsv"
 #model_performance_file = "AnnoTrans_MinAcc_0p005_MinCG_3_MinSpacing_30_Sampled_output_Sim30_D3D4D5.tsv"
 
-# Very permissive annotation (supported by at least 3 accessions)
+# MAF 3 2500 genes Very permissive annotation (supported by at least 3 accessions)
 #annotation_file = "gene_gbm_segments_min_acc_decile_2_min_CG_3_trans.tsv"
 #annotation_name = "maf_3_accessions"
 #model_performance_file = "gene_gbm_segments_min_acc_decile_2_min_CG_3_trans_h2az_1.2_Sampled_D3D4D5_output_Sim30.tsv"
@@ -162,6 +179,9 @@ this_accession_no = 1
 CG_site_density_file = "cg.density.btNuc.gff"
 
 
+
+
+# Read in the annotation, and the data/model methylation state. make genomicRanges
 this_annotation = read.table(file=annotation_file, sep="\t", header=TRUE)
 annotation.gr = makeGRangesFromDataFrame(this_annotation, seqnames.field="chromosome", start.field="start", end.field="end")
 
@@ -181,6 +201,7 @@ if (doing_model) {
 this_data.gr = makeGRangesFromDataFrame(this_data, seqnames.field="Chromosome", start.field="Start", end.field="End")
 
 
+# This loop was trying to work out metaplot histograms, but instead we moved to using the ends_analysis.pl method instead
 
 #gene_gbm_segments_min_seg_cover_94_min_CG_3_trans_output_Sim_All_v2.tsv contains Amy's simuation results averaged over segments
 #gene_gbm_segments_min_seg_cover_94_min_CG_3_trans_output_D7_All_v2.tsv
@@ -288,6 +309,8 @@ this_data.gr = makeGRangesFromDataFrame(this_data, seqnames.field="Chromosome", 
 write.table(cbind(this_annotation$chromosome, "source"=rep("-", nrow(this_annotation)), this_annotation$gene_ID, this_annotation$start, this_annotation$end, "score"=rep("-", nrow(this_annotation)), "strand"=rep("-", nrow(this_annotation)), "frame"=rep("-", nrow(this_annotation)), "attribute"=rep("-", nrow(this_annotation))), file=paste0(annotation_name,"_annotation.gff"), sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
 
 
+# we want to work out model performance variance with CG site density, segment length, etc, so load in some density data and the model performance data
+
 CG_site_density = read.table(file=CG_site_density_file, sep="\t", header=FALSE)
 CG_site_density$V1 = substr(CG_site_density$V1,4,4)
 CG_site_density_ranges = makeGRangesFromDataFrame(CG_site_density, seqnames.field="V1", start.field="V4", end.field="V5")
@@ -305,6 +328,7 @@ model_performance = read.table(file=model_performance_file, sep="\t", header=TRU
 model_performance$mu_meth_diff = model_performance$D3D4D5_mu_meth_diff
 ggplot(model_performance) + geom_histogram(aes(x=mu_meth_diff)) + labs(title=annotation_name)
 
+# use the histogram of model performance to set limits for what we like to call low, mid, high as in under-, mid- and over-methylation of segments
 low_max = -0.3
 high_min = 0.3
 mid_min = -0.25
@@ -317,6 +341,8 @@ ggplot(model_performance) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=S
 for (min_segment_length in 1:40) {
   cat(paste0("Min L_CG: ",min_segment_length, "  Rsquared: ", cor(model_performance[(model_performance$mu_meth_diff<(-.025)) & (model_performance$N_CG>=min_segment_length),]$mu_meth_diff, model_performance[(model_performance$mu_meth_diff<(-.025)) & (model_performance$N_CG>=min_segment_length),]$CG_density)^2, "\n"))
 }
+
+# write out low mid and high sets of data for CG site density, mCG density and H2A.Z levels for subsequent end_analysis.pl
 
 low_genes = model_performance[model_performance$mu_meth_diff<low_max, "gene_ID"]
 high_genes = model_performance[model_performance$mu_meth_diff>high_min, "gene_ID"]
@@ -356,6 +382,7 @@ write.table(cbind(high_h2az_table$seqnames, "source"=rep("-", nrow(high_h2az_tab
 #write.table(cbind(h2az_table$seqnames, "source"=rep("-", nrow(h2az_table)), "identifier"=rep("-", nrow(h2az_table)), h2az_table$start, h2az_table$end, h2az_table$score, "strand"=rep("-", nrow(h2az_table)), "frame"=rep("-", nrow(h2az_table)), "attribute"=rep("-", nrow(h2az_table))), file=paste0("h2az.gff"), sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
 
 
+# generate the relevant bash commands to do the ends analysis
 
 cat(paste0("perl ../../../Software/bs-sequel/ends_analysis.pl -g ",annotation_name, "_annotation.gff -b 10 -d 2000 -s 2 -5 --zero -x ID ", annotation_name, "_low_CG_sites.gff > model_ends/", annotation_name, "_low_CG_sites_5_",ifelse(doing_model,"model","data"),".txt\n", 
 "perl ../../../Software/bs-sequel/ends_analysis.pl -g ",annotation_name, "_annotation.gff -b 10 -d 2000 -s 2 -5 --zero -x ID ", annotation_name, "_mid_CG_sites.gff > model_ends/", annotation_name, "_mid_CG_sites_5_",ifelse(doing_model,"model","data"),".txt\n", 
@@ -378,6 +405,7 @@ cat(paste0("perl ../../../Software/bs-sequel/ends_analysis.pl -g ",annotation_na
 ))
 
 
+# repeat the whole thing but do deciles instead of low/mid/high
 
 performance_deciles = quantile(model_performance$mu_meth_diff, prob = seq(0, 1, length = 11), type = 5)
 
@@ -414,6 +442,9 @@ for (this_decile in 1:10) {
 # met1 CHIP-chip: decile 9 and 10 of mu_meth_diff are somewhat out on the H2AZ axis compared to the other deciles, and all deciles have some 5' slope. Cut off of H2AZ at -0.2 should take care of both issues
 
 
+
+# all the above was preparation to find a cutoff of H2A.Z to use to trim annotations. Now we can get on with that
+
 ### Trim annotation with H2AZ cutoff of 1.2 or 0:
 
 library(zoo)
@@ -427,6 +458,7 @@ if (h2az_set=="met1_chipchip") {
    h2az_threshold = 0
 }
 
+# smooth H2A.Z data over 5 adjacent windows to damp down noise
 # don't really care about ends of chromosomes, as not part of any gene, so I'm going to roll the smoothing window over the ends of the chromosomes
 # pad with zeros for ends of sequence
 h2az$smoothed_score = c(0,0,rollmean(h2az_table$score, k=5),0,0)
@@ -470,7 +502,7 @@ for (this_segment in 1:length(annotation.gr)) {
   }
 }
 
-write.table(updated_annotation[!is.na(updated_annotation$start), ], file=paste0(substr(annotation_file,1,str_length(annotation_file)-4),"_h2az_",h2az_set,"_",h2az_threshold,".tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names=FALSE)
+write.table(updated_annotation[!is.na(updated_annotation$start), ], file=paste0(substr(annotation_file,1,str_length(annotation_file)-4),"_h2az_",h2az_set,"_",h2az_threshold,"_2.tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names=FALSE)
 
 
 # What is mean H2A.Z density per segment?
@@ -488,4 +520,142 @@ for (this_segment in 1:nrow(updated_annotation)) {
   }
 }
 
-write.table(cbind(updated_annotation, mean_h2az, max_h2az)[!is.na(updated_annotation$start), ], file=paste0(substr(annotation_file,1,str_length(annotation_file)-4),"_h2az_",h2az_set,"_",h2az_threshold,"_mean_h2az.tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names=FALSE)
+write.table(cbind(updated_annotation, mean_h2az, max_h2az)[!is.na(updated_annotation$start), ], file=paste0(substr(annotation_file,1,str_length(annotation_file)-4),"_h2az_",h2az_set,"_",h2az_threshold,"_mean_h2az_2.tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names=FALSE)
+
+
+# Analyse performance by various factors
+
+performance_analysis = merge(cbind(updated_annotation, mean_h2az, max_h2az)[!is.na(updated_annotation$start), ], model_performance[,], by="gene_ID")
+
+# the very highly methylated segments (M>0.8) are very short and very under-methylated
+ggplot(performance_analysis) + geom_point(aes(x=N_CG, y=mu_meth_diff, colour=Col0_meth_frac))
+
+performance_analysis_set = performance_analysis[performance_analysis$Col0_meth_frac<=0.75,]
+
+ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_name, "  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2))
+
+# Rsquared improves progressively as we filter M<=1 down to M<=0.75 for Col-0 values
+for (col0_m_threshold in c(1, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6)) {
+  
+  filt_annotation = cbind(updated_annotation, mean_h2az, max_h2az)
+  filt_annotation = filt_annotation[!is.na(filt_annotation$Col0_meth_frac) & (filt_annotation$Col0_meth_frac<=col0_m_threshold),]
+  performance_analysis_set = performance_analysis[!is.na(performance_analysis$Col0_meth_frac) & (performance_analysis$Col0_meth_frac<=col0_m_threshold),]
+  cat(paste0(col0_m_threshold, " ", nrow(performance_analysis_set), " ", (cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2), "\n"))
+  
+  print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_name, " Col-0 M<=",col0_m_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2)))
+
+  #write.table(filt_annotation, file=paste0(substr(annotation_file,1,str_length(annotation_file)-4),"_h2az_",h2az_set,"_",h2az_threshold,"_",mean_h2az_threshold,"_mean_h2az.tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names=FALSE)
+}
+
+
+# Make a new annotation where the mean H2A.Z density per segment is less than a different, more strict threshold
+# Rsquared improves progressively as we use a more strict mean_h2az threshold
+
+for (mean_h2az_threshold in c(1, 1.04, 1.08, 1.12, 1.16, 1.2)) {
+  
+  filt_annotation = cbind(updated_annotation, mean_h2az, max_h2az)
+  filt_annotation = filt_annotation[!is.na(filt_annotation$mean_h2az) & (filt_annotation$mean_h2az<=mean_h2az_threshold),]
+  performance_analysis_set = performance_analysis[!is.na(performance_analysis$mean_h2az) & (performance_analysis$mean_h2az<=mean_h2az_threshold),]
+  cat(paste0(mean_h2az_threshold, " ", nrow(performance_analysis_set), " ", (cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2), "\n"))
+  
+  print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2)))
+
+  write.table(filt_annotation, file=paste0(substr(annotation_file,1,str_length(annotation_file)-4),"_h2az_",h2az_set,"_",h2az_threshold,"_",mean_h2az_threshold,"_mean_h2az_2.tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names=FALSE)
+}
+
+
+# Read in file of nn_te genes and see effect on performance
+non_te_genes = read.table(file="non_te_genes_0.05.txt", sep="\t", header=FALSE)
+filt_annotation = updated_annotation[updated_annotation$gene_ID %in% non_te_genes$V1,]
+performance_analysis_set = performance_analysis[performance_analysis$gene_ID %in% non_te_genes$V1,]
+print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2)))
+
+non_te_genes_strict = read.table(file="non_te_genes_strict_0.05.txt", sep="\t", header=FALSE)
+filt_annotation = updated_annotation[updated_annotation$gene_ID %in% non_te_genes_strict$V1,]
+performance_analysis_set = performance_analysis[performance_analysis$gene_ID %in% non_te_genes_strict$V1,]
+print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2)))
+
+
+#Bit of both:
+ performance_analysis_set = performance_analysis[!is.na(performance_analysis$mean_h2az) & (performance_analysis$mean_h2az<=mean_h2az_threshold),]
+ performance_analysis_set = performance_analysis_set[performance_analysis_set$gene_ID %in% non_te_genes$V1,]
+ print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2)))
+
+ performance_analysis_set = performance_analysis[!is.na(performance_analysis$mean_h2az) & (performance_analysis$mean_h2az<=mean_h2az_threshold),]
+ performance_analysis_set = performance_analysis_set[performance_analysis_set$gene_ID %in% non_te_genes_strict$V1,]
+ print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2)))
+ 
+
+ 
+print(ggplot(performance_analysis_set) + geom_point(aes(x=L_locus, y=CG_density, colour=mu_meth_diff)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2))+ scale_color_gradientn(colours=rainbow(7)))
+
+print(ggplot(performance_analysis_set) + geom_point(aes(x=mean_h2az, y=Col0_meth_frac, colour=mu_meth_diff)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2))+ scale_color_gradientn(colours=rainbow(7)))
+
+print(ggplot(performance_analysis_set) + geom_point(aes(x=mean_h2az, y=CG_density, colour=mu_meth_diff)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2))+ scale_color_gradientn(colours=rainbow(7))+ scale_x_log10())
+ 
+print(ggplot(performance_analysis_set) + geom_point(aes(x=mean_h2az, y=CG_density, colour=mu_meth_diff)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2))+ scale_color_gradientn(colours=rainbow(7)))
+ 
+
+
+
+
+
+# Find genes which are overlapped by a TE in more than 5% of accessions and remove them
+gene_accession_status = read.table(file="m1001_gene_gbm_tem_umr_calls_2.txt", sep="\t", header=TRUE)
+
+for (tem_maf in c(0.01, 0.02, 0.03, 0.04, 0.05)) {
+  
+}
+
+
+
+
+# We now make an annotation of mean H2A.Z at the closest point to each CG site, so it can be used for future modelling
+
+# this step takes ages!
+all_samples_meth_status = readRDS(file=paste0("m1001_CG_all_samples_meth_status_0.005_0.05_10_25_SNPs.rds"))
+
+CG_site_ranges = makeGRangesFromDataFrame(all_samples_meth_status, seqnames.field="Chromosome", start.field="Locus", end.field = "Locus")
+levels(CG_site_ranges@seqnames@values) = substr(as.character(levels(CG_site_ranges@seqnames@values)),4,4)
+CG_site_ranges@seqinfo@seqnames = levels(CG_site_ranges@seqnames@values)
+
+nuclear_CG_sites = CG_site_ranges[seqnames(CG_site_ranges) %in% c("1","2","3","4","5")]
+nuclear_h2az=h2az[seqnames(h2az) %in% c("1","2","3","4","5")]
+site_h2az = nuclear_h2az[nearest(nuclear_CG_sites, nuclear_h2az)]$score
+
+write.table(cbind(as.data.frame(nuclear_CG_sites)[,1:2], "h2az"=site_h2az), file=paste0("nuclear_CG_site_nearest_h2az_",h2az_set,".tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names=FALSE)
+
+
+
+# Load gff.genes and find a list of non-overlapping genes
+ pathroot="X:/Daniel-Zilberman"
+ 
+ reference_gff = paste0(pathroot,"/Reference_data/Genomes/Arabidopsis/Araport11/Araport11_GFF3_genes_transposons.201606.gff")  # AraPort11 annotation
+ 
+ 
+ library(stringr)
+ 
+ # Load the annotation
+ annot_gff = read.delim(reference_gff, header=F, comment.char="#")	
+ 
+ gff.genes = annot_gff[annot_gff[,3]=="gene",]
+ 
+ 
+ # Convert chromosome names to uppercase to match previous objects
+ gff.genes$V1=toupper(gff.genes$V1)
+ 
+ gff.genes$gene_ID=str_split_fixed(str_split_fixed(gff.genes$V9, ';',3)[,1],"=",2)[,2]
+ 
+ gff.genes=within(gff.genes, {gene_name=str_split_fixed(str_split_fixed(V9, ';',3)[,2],"=",2)[,2]})
+ 
+ gene_ranges=makeGRangesFromDataFrame(df = gff.genes, start.field = "V4", end.field = "V5",seqnames.field = "V1")
+ # fix chromosome IDs
+ levels(gene_ranges@seqnames@values) = substr(as.character(levels(gene_ranges@seqnames@values)),4,4)
+ gene_ranges@seqinfo@seqnames = levels(gene_ranges@seqnames@values)
+
+ gene_olaps = findOverlaps(gene_ranges, gene_ranges)
+ overlapping_genes = unique(queryHits(gene_olaps[queryHits(gene_olaps)!=subjectHits(gene_olaps)]))
+ non_overlapping_genes = gff.genes[-overlapping_genes,]
+ 
+ write.table(non_overlapping_genes$gene_ID, file="non_overlapping_genes.txt", sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
+ 
