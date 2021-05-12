@@ -70,3 +70,28 @@ Methylation calls and methylation segmentation models are integrated, to generat
 **parse_h2az_data.R** loads Chip-Seq or CHIP-Chip data relating to H2A.Z from published experiments, parses and smooths, and uses the H2A.Z abundance at the boundaries of annotated gbM segments to trim those segments before modelling. Also filters segments based on their remaining mean H2A.Z, and allows to remove segments from genes with teM calls > 0.05 MAF. This script also generates .GFF data files and perl commands to run ends_analysis.pl to produce annotation metaplots of filtered segments, with respect to H2A.Z, CG site density and methylation density, in order to assess model performance.
 
 **parse_h2az_associations.R** loads lists of genes associated by PyGWAS with variation around HTA9 gene (H2A.Z), and compares these genes with those not associated, in terms of their H2A.Z.
+
+
+Scripts specific to the analysis of the Schmitz and Becker MA line data sets
+5_estimate_de_novo_rate_2019-09-12.R
+5-estimate_GBM_rates_2020-08-07.R
+assign_gene_methylation_status_2020-08-21.R
+5-estimate_GBM_boundary_size_2019-04-25.R
+5-methylation_calls_2018-06-26.R
+5-methylation_calls_optimise_non_CG_segmentationf_2018-03-14.R
+5-methylation_calls_optimise_mCG_cutoff_2018-03-14.R
+5-methylation_calls.sh
+4-find_CGs.pl
+4-find_CGs.sh
+4-generate_covs.pl
+4-annotate_gffs.pl
+4-annotate_gffs.sh
+3-align_bs-sequel_PRJEB2678.sh
+3-align_bs-sequel_SRA035939.sh
+3-align_SRA035939.sh
+3-align-PRJEB2678.sh
+2-trim_SRA035939.sh
+2-trim_PRJEB2678.sh
+
+1-qc.sh
+0-stage.sh
