@@ -98,3 +98,8 @@ Methylation calls and methylation segmentation models are integrated, to generat
   - 2-trim_PRJEB2678.sh
   - 1-qc.sh
   - 0-stage.sh
+
+
+**Phylogenetic analyses**
+  - 5-RAxML_2018-07-30.bat
+  - 5-phylogenetic_analysis_2019-08-19.R
