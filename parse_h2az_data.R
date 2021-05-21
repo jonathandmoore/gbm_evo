@@ -150,6 +150,7 @@ model_file="gene_gbm_segments_MAF_5_perc_trans_h2az_wt_chipseq_1p2_AllLoci_D3D4D
 #model_performance_file = "gene_gbm_segments_min_seg_cover_47_min_CG_3_trans_Sampled_D3D4D5_output_Sim30.tsv"
 #model_performance_file = "gene_gbm_segments_MAF_5_perc_trans_h2az_wt_chipseq_1p2_Sampled_D3D4D5_output_Sim30.tsv"
 #model_performance_file = "gene_gbm_segments_MAF_5_perc_trans_h2az_met1_chipchip_0_Sampled_D3D4D5_output_Sim30.tsv"
+model_performance_file = "gene_gbm_segments_MAF_5_perc_trans_h2az_wt_chipseq_1p2_Sampled_D3D4D5_output_V1b_Sim30.tsv"
 model_performance_file = "gene_gbm_segments_MAF_5_perc_trans_h2az_wt_chipseq_1p2_AllLoci_D3D4D5_output_Sim30.tsv"
 
 # MAF 10% all genes
@@ -339,7 +340,8 @@ ggplot(model_performance) + geom_point(aes(x=Col0_meth_frac, y=mu_meth_diff)) + 
 ggplot(model_performance) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_name, "  Rsquared=",cor(model_performance$Sim_mu_methylation_fraction, model_performance$D3D4D5_mu_methylation_fraction)^2))
 
 for (min_segment_length in 1:40) {
-  cat(paste0("Min L_CG: ",min_segment_length, "  Rsquared: ", cor(model_performance[(model_performance$mu_meth_diff<(-.025)) & (model_performance$N_CG>=min_segment_length),]$mu_meth_diff, model_performance[(model_performance$mu_meth_diff<(-.025)) & (model_performance$N_CG>=min_segment_length),]$CG_density)^2, "\n"))
+  #cat(paste0("Min L_CG: ",min_segment_length, "  Rsquared: ", cor(model_performance[(model_performance$mu_meth_diff<(-.025)) & (model_performance$N_CG>=min_segment_length),]$mu_meth_diff, model_performance[(model_performance$mu_meth_diff<(-.025)) & (model_performance$N_CG>=min_segment_length),]$CG_density)^2, "\n"))
+  cat(paste0("Min L_CG: ",min_segment_length, "  Rsquared: ", cor(model_performance[ (model_performance$N_CG>=min_segment_length),]$Sim_mu_methylation_fraction, model_performance[ (model_performance$N_CG>=min_segment_length),]$D3D4D5_mu_methylation_fraction)^2, "\n"))
 }
 
 # write out low mid and high sets of data for CG site density, mCG density and H2A.Z levels for subsequent end_analysis.pl
@@ -466,12 +468,16 @@ h2az$smoothed_score = c(0,0,rollmean(h2az_table$score, k=5),0,0)
 #this_annotation$chromosome
 
 updated_annotation = this_annotation
+
 updated_annotation$start = NA
 updated_annotation$end = NA
 
+# If TRUE, this version starts with whole genes in this_anotation, and trims them from gene ends rather than from annotation ends
+do_whole_gene = TRUE
+
 for (this_segment in 1:length(annotation.gr)) {
-  segment_start = this_annotation[this_segment,"start"]
-  segment_end = this_annotation[this_segment,"end"]
+  segment_start = ifelse(do_whole_gene, this_annotation[this_segment,"gene_start"], this_annotation[this_segment,"start"])
+  segment_end = ifelse(do_whole_gene, this_annotation[this_segment,"gene_end"], this_annotation[this_segment,"end"])
   segment_h2az = h2az[queryHits(findOverlaps(h2az, annotation.gr[this_segment]))]
   #cat(paste0(this_segment, ": ", segment_h2az$smoothed_score, "\n"))
 
@@ -577,14 +583,21 @@ print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_
 
 
 #Bit of both:
- performance_analysis_set = performance_analysis[!is.na(performance_analysis$mean_h2az) & (performance_analysis$mean_h2az<=mean_h2az_threshold),]
- performance_analysis_set = performance_analysis_set[performance_analysis_set$gene_ID %in% non_te_genes$V1,]
- print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2)))
+for (this_te_maf in c(0.01, 0.02, 0.03, 0.04, 0.05)) {
+  annotation_nickname = "gbM_MAF: 0.05"
+  
+  non_te_genes = read.table(file=paste0("non_te_genes_", this_te_maf, ".txt"), sep="\t", header=FALSE)
 
- performance_analysis_set = performance_analysis[!is.na(performance_analysis$mean_h2az) & (performance_analysis$mean_h2az<=mean_h2az_threshold),]
- performance_analysis_set = performance_analysis_set[performance_analysis_set$gene_ID %in% non_te_genes_strict$V1,]
- print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2)))
- 
+   performance_analysis_set = performance_analysis[!is.na(performance_analysis$mean_h2az) & (performance_analysis$mean_h2az<=mean_h2az_threshold),]
+   performance_analysis_set = performance_analysis_set[performance_analysis_set$gene_ID %in% non_te_genes$V1,]
+   print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_nickname, " TE_MAF: ", this_te_maf, "  mean_h2az<=",mean_h2az_threshold,"  N=", nrow(performance_analysis_set),"  Rsquared=",round(cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2, 2))))
+
+   non_te_genes_strict = read.table(file=paste0("non_te_genes_strict_", this_te_maf, ".txt"), sep="\t", header=FALSE)
+
+   performance_analysis_set = performance_analysis[!is.na(performance_analysis$mean_h2az) & (performance_analysis$mean_h2az<=mean_h2az_threshold),]
+   performance_analysis_set = performance_analysis_set[performance_analysis_set$gene_ID %in% non_te_genes_strict$V1,]
+   print(ggplot(performance_analysis_set) + geom_point(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + geom_density_2d(aes(x=D3D4D5_mu_methylation_fraction, y=Sim_mu_methylation_fraction)) + ggtitle(paste0(annotation_nickname, " TE_MAF: ", this_te_maf, " strict  mean_h2az<=",mean_h2az_threshold,"  N=", nrow(performance_analysis_set),"  Rsquared=",round(cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2, 2))))
+} 
 
  
 print(ggplot(performance_analysis_set) + geom_point(aes(x=L_locus, y=CG_density, colour=mu_meth_diff)) + ggtitle(paste0(annotation_name, " mean_h2az<=",mean_h2az_threshold,"  Rsquared=",cor(performance_analysis_set$Sim_mu_methylation_fraction, performance_analysis_set$D3D4D5_mu_methylation_fraction)^2))+ scale_color_gradientn(colours=rainbow(7)))
@@ -597,8 +610,57 @@ print(ggplot(performance_analysis_set) + geom_point(aes(x=mean_h2az, y=CG_densit
  
 
 
+# genes over- and under-methylated by the model
+mean(performance_analysis_set$mu_meth_diff)+2*sd(performance_analysis_set$mu_meth_diff)
+#[1] 0.3236266
+mean(performance_analysis_set$mu_meth_diff)-2*sd(performance_analysis_set$mu_meth_diff)
+#[1] -0.2664574
+performance_analysis_set$performance_cat = ifelse(performance_analysis_set$mu_meth_diff<mean(performance_analysis_set$mu_meth_diff)-2*sd(performance_analysis_set$mu_meth_diff),-1,ifelse(performance_analysis_set$mu_meth_diff>mean(performance_analysis_set$mu_meth_diff)+2*sd(performance_analysis_set$mu_meth_diff),1,0))
+
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=mu_meth_diff))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=CG_spacing))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=N_CG))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=mean_h2az))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=max_h2az))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=L_locus))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=CG_density))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=Sim_mu_methylation_fraction))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=Sim_sigma_methylation_fraction))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=D3D4D5_mu_methylation_fraction))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=D3D4D5_sigma_methylation_fraction))
+ggplot(performance_analysis_set) + geom_boxplot(aes(group=performance_cat, y=Col0_meth_frac))
 
 
+# Remove segments which are within 0, 500bp, 1kb of a TEM segment in COl-0
+
+segmentation_model.gr = readRDS(file = "../../Jay-SMP_variation/5-analysis/SRA035939/SRA035939_CG_segmentation_model_draft3.rds")
+
+# Capitalise chromosome names in segmentation_model.gr
+#levels(segmentation_model.gr@seqnames)=toupper(levels(segmentation_model.gr@seqnames))
+#segmentation_model.gr@seqinfo@seqnames=levels(segmentation_model.gr@seqnames)
+
+# Shorten chromosome names in segmentation_model.gr
+levels(segmentation_model.gr@seqnames)=substr(levels(segmentation_model.gr@seqnames),4,4)
+segmentation_model.gr@seqinfo@seqnames=levels(segmentation_model.gr@seqnames)
+
+GBM_segments.gr = segmentation_model.gr[segmentation_model.gr$segment.mStatus=="GBM"]
+TEM_segments.gr = segmentation_model.gr[segmentation_model.gr$segment.mStatus=="TEM"]
+UMR_segments.gr = segmentation_model.gr[segmentation_model.gr$segment.mStatus=="UMR"]
+length(GBM_segments.gr)
+length(TEM_segments.gr)
+length(UMR_segments.gr)
+
+# find segments in model overlapping or near to TEM segments
+performance_analysis_set.gr = makeGRangesFromDataFrame(performance_analysis_set, seqnames.field="chromosome", start.field="start", end.field="end")
+
+model_tem_olaps = findOverlaps(performance_analysis_set.gr, TEM_segments.gr)
+new_performance_analysis_set = performance_analysis_set[-queryHits(model_tem_olaps),] 
+
+# What if we try to fit a linear model to some of the data, and use that to predict the remaining data?
+ 
+ 
+ 
+ 
 
 # Find genes which are overlapped by a TE in more than 5% of accessions and remove them
 gene_accession_status = read.table(file="m1001_gene_gbm_tem_umr_calls_2.txt", sep="\t", header=TRUE)
